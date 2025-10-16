@@ -46,3 +46,7 @@ export class RateLimitError extends AppError {
         super(message, 429, true);
     }
 }
+
+
+// Re-export middleware so consumers can import from the package root
+export { errorMiddleware } from './error-handler';
