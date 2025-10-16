@@ -4,7 +4,7 @@
   "private": true,
   "nx": {
     "implicitDependencies": [
-      "@eshop/api-gateway"
+      "api-gateway"
     ],
     "targets": {
       "e2e": {

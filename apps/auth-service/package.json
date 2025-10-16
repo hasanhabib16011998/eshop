@@ -6,12 +6,11 @@
     "dev": "node src/main.ts"
   },
   "nx": {
-    "name": "auth-service",
     "projectType": "application",
     "sourceRoot": "auth-service/src",
     "targets": {
       "serve": {
-        "executor": "nx/js-node",
+        "executor": "@nx/js:node",
         "defaultConfiguration": "development",
         "dependsOn": [
           "build"
