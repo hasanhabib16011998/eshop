@@ -16,15 +16,15 @@
           "build"
         ],
         "options": {
-          "buildTarget": "auth-service:build",
+          "buildTarget": "@eshop/auth-service:build",
           "runBuildTargetDependencies": false
         },
         "configurations": {
           "development": {
-            "buildTarget": "auth-service:build:development"
+            "buildTarget": "@eshop/auth-service:build:development"
           },
           "production": {
-            "buildTarget": "auth-service:build:production"
+            "buildTarget": "@eshop/auth-service:build:production"
           }
         }
       },
