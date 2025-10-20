@@ -1,13 +1,16 @@
 import { PrismaClient } from "@prisma/client";
 
 declare global {
-    namespace globalThis {
-        var prismadb: PrismaClient;
-    }
-};
+  // Avoid eslint/no-var, and allow reuse across hot reloads
+  // eslint-disable-next-line no-var
+  var prismadb: PrismaClient | undefined;
+}
 
-const prisma = new PrismaClient();
+const prisma = global.prismadb ?? new PrismaClient();
 
-if (process.env.NODE_ENV === "production") global.prismadb = prisma;
+// In development we attach to globalThis to avoid creating multiple instances
+if (process.env.NODE_ENV !== "production") {
+  global.prismadb = prisma;
+}
 
 export default prisma;
