@@ -14,6 +14,8 @@ export const validateRegistrationData = (data:any, userType: "user" | "seller") 
     if(!emailRegex.test(email)) {
         return new ValidationError("Invalid email format!")
     }
+
+    return null;
 }
 
 export const checkOTPRestriction = async(email:string, next:NextFunction) => {
