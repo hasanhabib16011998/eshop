@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from "cors";
-import { errorMiddleWare } from '../../../packages/error-handler/error-middleware';
+import { errorMiddleWare } from '@packages/error-handler/error-middleware';
 import cookieParser from 'cookie-parser';
 import router from './routes/auth.router';
 import swaggerUI from 'swagger-ui-express';

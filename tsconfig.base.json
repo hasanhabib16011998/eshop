@@ -16,6 +16,12 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
+    "baseUrl": ".",
+    "paths": {
+      "@packages/*":[
+        "packages/*"
+      ] 
+    },
     "customConditions": ["@eshop/source"]
   }
 }

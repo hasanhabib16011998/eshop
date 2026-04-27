@@ -1,17 +1,31 @@
 import { Request, Response, NextFunction } from "express"
 import { checkOTPRestriction, sendOTP, trackOTPRequests, validateRegistrationData } from "../utils/auth.helper"
-import prisma from "../../../../packages/libs/prisma";
-import { ValidationError } from "../../../../packages/error-handler";
+import prisma from "@packages/libs/prisma";
+import { ValidationError } from "@packages/error-handler";
 
 
 //Register new user
 export const userRegistration = async(req:Request, res: Response, next:NextFunction) => {
+
+    /* #swagger.tags = ['Auth']
+      #swagger.description = 'Endpoint to register a new user.'
+      #swagger.parameters['body'] = {
+            in: 'body',
+            description: 'User registration data',
+            required: true,
+            schema: {
+                name: "John Doe",
+                email: "john@example.com"
+            }
+      }
+    */
+
     try {
         validateRegistrationData(req.body, "user");
-        const [name, email] = req.body;
+        const {name, email} = req.body;
 
         const existingUser = await prisma.users.findUnique({
-            where: email
+            where: {email}
         })
 
         if (existingUser){
