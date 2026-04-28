@@ -137,3 +137,29 @@ export const loginUser = async(req: Request, res: Response, next: NextFunction) 
 export const userForgotPassword = async(req:Request, res: Response, next: NextFunction) => {
     await handleForgotPassword(req,res,next,'user');
 }
+
+//reset user password
+export const resetUserPassword = async(req:Request, res: Response, next: NextFunction) => {
+    try {
+        const { email, newPassword } = req.body;
+        if(!email || !newPassword) {
+            return next(new ValidationError("Email and password are required!"))
+        };
+
+        const user = await prisma.users.findUnique({ where: { email }});
+        if(!user) return next(new ValidationError("User not found!"));
+
+        //compare new password with existing
+        const isSamePassword = await bcrypt.compare(newPassword, user.password!)
+        if(isSamePassword) {
+            return next(new ValidationError("New password cannot be same as old password"))
+        }
+
+        //hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+
+    } catch (error) {
+        next(error);
+    }
+}
