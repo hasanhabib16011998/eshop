@@ -6,12 +6,12 @@
     "version": "1.0.0"
   },
   "host": "localhost:6001",
-  "basePath": "/",
+  "basePath": "/api",
   "schemes": [
     "http"
   ],
   "paths": {
-    "/api/user-registration": {
+    "/user-registration": {
       "post": {
         "tags": [
           "Auth"
@@ -33,10 +33,39 @@
                 "email": {
                   "type": "string",
                   "example": "john@example.com"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/verify-user": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "otp": {
+                  "example": "any"
                 },
                 "password": {
-                  "type": "string",
-                  "example": "12345678"
+                  "example": "any"
+                },
+                "name": {
+                  "example": "any"
                 }
               }
             }
