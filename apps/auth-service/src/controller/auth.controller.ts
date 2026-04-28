@@ -34,7 +34,7 @@ export const userRegistration = async(req:Request, res: Response, next:NextFunct
 
         await checkOTPRestriction(email,next);
         await trackOTPRequests(email,next);
-        await sendOTP(email, name, "user-activation-mail")
+        await sendOTP(name, email, "user-activation-mail")
 
         res.status(200).json({
             message: "OTP sent to email. Please verify your account."
