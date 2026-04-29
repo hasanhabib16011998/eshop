@@ -138,6 +138,11 @@ export const userForgotPassword = async(req:Request, res: Response, next: NextFu
     await handleForgotPassword(req,res,next,'user');
 }
 
+//verify forgot password OTP
+export const verifyUserForgotPassword = async(req:Request, res: Response, next: NextFunction) => {
+    await verifyForgotPasswordOTP(req,res,next);
+}
+
 //reset user password
 export const resetUserPassword = async(req:Request, res: Response, next: NextFunction) => {
     try {
@@ -157,6 +162,15 @@ export const resetUserPassword = async(req:Request, res: Response, next: NextFun
 
         //hash the new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await prisma.users.update({
+            where: {email},
+            data: { password: hashedPassword },
+        });
+
+        res.status(200).json({
+            message: "Password reset successfully!"
+        })
 
 
     } catch (error) {
