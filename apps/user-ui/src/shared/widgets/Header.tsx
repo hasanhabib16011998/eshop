@@ -3,6 +3,7 @@ import React from 'react';
 import { HeartIcon, Search, ShoppingCart } from 'lucide-react';
 import { UserRound } from 'lucide-react';
 import HeaderBottom from './HeaderBottom';
+import Logo from '../../assets/images/Logo';
 
 function Header() {
   return (
@@ -11,7 +12,8 @@ function Header() {
         
         {/* 1. Logo Section */}
         <div>
-          <Link href={"/"}>
+          <Link href={"/"} className='flex items-center gap-2'>
+            <Logo width={40} height={40}/>
             <span className='text-3xl font-[500]'>Eshop</span>
           </Link>
         </div>
