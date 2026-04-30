@@ -52,7 +52,7 @@ export default function SignUp() {
             setTimer(60);
             startResendTimer();
         }
-    })
+    });
 
     const verifyOtpMutation = useMutation({
         mutationFn: async() => {
