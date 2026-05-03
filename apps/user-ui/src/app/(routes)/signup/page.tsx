@@ -95,6 +95,9 @@ export default function SignUp() {
     };
 
     const resendOTP = () => {
+        if(userData) {
+            signUpMutation.mutate(userData);
+        }
         console.log('OTP resent to your email')
     }
   return (
