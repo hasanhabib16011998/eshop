@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react'
 import {AlignLeft, ChevronDown, UserRound, HeartIcon, ShoppingCart} from 'lucide-react';
 import { navItems } from '../../configs/constants';
 import Link from 'next/link';
+import useUser from '../../hooks/useUser';
 
 export default function HeaderBottom() {
     const [show, setShow] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
+    const { user } = useUser();
 
     //track scroll position
     useEffect(()=> {
