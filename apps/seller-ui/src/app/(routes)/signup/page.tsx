@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation';
 import React, { useRef, useState } from 'react'
 import { useForm } from "react-hook-form";
 import axios, { AxiosError } from 'axios';
-import { clearInterval } from 'timers';
+import { countries } from '../../utils/countries';
 
 type FormData = {
     name: string,
-    email: string;
-    password: string;
+    email: string,
+    password: string,
+    phone_number: string,
+    country:string,
 }
 
 export default function SignUp() {
@@ -161,6 +163,54 @@ export default function SignUp() {
                                     </p>
                                 )}
 
+                                <label className='block text-gray-700 mb-1'>Phone Number</label>
+                                <input
+                                    type="tel"
+                                    placeholder='880196979****'
+                                    className='w-full p-2 border border-gray-300 outline-0 !rounded mb-1'
+                                    {...register("phone_number", {
+                                        required: "Phone Number is required",
+                                        pattern: {
+                                            value: /^\+?[1-9]\d{1,14}$/,
+                                            message: "Invalid Phone Number"
+                                        },
+                                        minLength: {
+                                            value:10,
+                                            message: "Phone number must be at least 10 digits"
+                                        },
+                                        maxLength: {
+                                            value:13,
+                                            message: "Phone number cannot exceed 15 digits"
+                                        }
+                                    })}
+                                />
+                                {errors.phone_number && (
+                                    <p className='text-red-500 text-sm'>
+                                        {String(errors.phone_number.message)}
+                                    </p>
+                                )}
+
+                                <label className='block text-gray-700 mb-1'>Country</label>
+                                <select 
+                                className='w-full p-2 border border-gray-300 outline-0 !rounded mb-1'
+                                {...register("country", {
+                                    required: "Country is required",
+                                })}
+                                >
+                                    <option value="">Select Your Country</option>
+                                    {countries.map((country)=>(
+                                        <option key={country.code} value={country.code}>
+                                            {country.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.country && (
+                                    <p className='text-red-500 text-sm'>
+                                        {String(errors.country.message)}
+                                    </p>
+                                )}
+
+
                                 <label className='block text-gray-700 mb-1'>Password</label>
                                 <div className='relative'>
                                     <input
@@ -197,6 +247,17 @@ export default function SignUp() {
                                 >
                                     {signUpMutation.isPending ? "Signing up..." : "Sign Up"}
                                 </button>
+
+                                {signUpMutation.isError && signUpMutation.error instanceof AxiosError && (
+                                    <p className='text-red-500 text-sm mt-2'>
+                                        {signUpMutation.error.response?.data?.message || signUpMutation.error.message}
+                                    </p>
+                                )}
+
+                                <p className='text-center text-gray-500 mb-4 mt-2'>
+                                    Already have an account? {" "}
+                                    <Link href={"/login"} className='text-blue-500'>Login</Link>
+                                </p>
                             </form>
                         ) : (
                             <div>
