@@ -9,12 +9,15 @@ let isRefreshing = false;
 let refreshSubscribers: (() => void)[] = [];
 
 
-//handle logout and prevent infinite loops
+// handle logout and prevent infinite loops on public pages
 const handleLogout = () => {
-    if(window.location.pathname !== "/login") {
+    // Define the routes where users shouldn't be redirected if they are unauthenticated
+    const publicRoutes = ["/login", "/signup", "/forgot-password"];
+    
+    if (!publicRoutes.includes(window.location.pathname)) {
         window.location.href = "/login";
     }
-}
+};
 
 //handle adding a new access token to queued requests
 const subscribeTokenRefresh = (callback: ()=> void) => {
@@ -56,7 +59,7 @@ axiosInstance.interceptors.response.use(
                     {},
                     { withCredentials: true }
                 );
-                isRefreshing = true;
+                isRefreshing = false;
                 onRefreshSuccess();
                 return axiosInstance(originalRequest);
             } catch (error) {
