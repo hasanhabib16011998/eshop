@@ -223,3 +223,93 @@ export const refreshToken = async( req: Request, res: Response, next: NextFuncti
         return next(error);
     }
 }
+
+
+//-----------Seller Registration Start----------------
+//register new seller
+export const registerSeller = async( req: Request, res: Response, next: NextFunction) => {
+    try {
+        validateRegistrationData(req.body, "seller");
+        const { name, email } = req.body;
+
+        const existingSeller = await prisma.sellers.findUnique({
+            where: { email },
+        });
+
+        if(existingSeller) {
+            throw new ValidationError("Seller already exists with this email!")
+        }
+
+        await checkOTPRestriction(email, next);
+        await trackOTPRequests(email, next);
+        await sendOTP( name, email, 'seller-activation');
+        res.status(200).json({
+            message: "OTP sent to email. Please verify your account."
+        })
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+//verify seller with OTP
+export const verifySeller = async(req:Request, res: Response, next:NextFunction) => {
+    try {
+        const { email, otp, password, name, phone_number, country } = req.body;
+        if( !email || !otp || !password || !name || !phone_number || !country) {
+            return next(new ValidationError("All fields are required!"));
+
+        }
+
+        const existingSeller = await prisma.sellers.findUnique({where: {email}});
+            
+        if(existingSeller){
+            return next(new ValidationError("Seller already exists with this email!"));
+        }
+        await verifyOTP(email, otp, next);
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await prisma.sellers.create({
+            data: { name, email, password: hashedPassword , phone_number, country}
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Seller Registered Successfully!"
+        })
+
+    } catch (error) {
+        return next(error);
+
+    }
+}
+
+//create a new shop
+export const createShop = async(req:Request, res: Response, next:NextFunction) => {
+    try {
+        const { name, bio, address, opening_hours, website, category, sellerId } = req.body;
+        if ( !name || !bio || !address || !sellerId || !opening_hours || !category ) {
+            return next(new ValidationError("All fields are required!"));
+        }
+
+        const shopData:any = { name, bio, address, opening_hours, category, sellerId };
+
+        if(website && website.trim() !== ""){
+            shopData.website = website;
+        }
+
+        const shop = await prisma.shops.create({
+            data: shopData,
+        });
+        res.status(200).json({
+            success: true,
+            shop,
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+//create stripe account link
+

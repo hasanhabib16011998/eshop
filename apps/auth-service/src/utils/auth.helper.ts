@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { ValidationError } from "../../../../packages/error-handler";
 import redis from "../../../../packages/libs/redis";
 import { sendEmail } from "./sendMail";
-import { NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import prisma from "@packages/libs/prisma";
 
 const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/ ;
@@ -87,7 +87,11 @@ export const handleForgotPassword = async(req:Request, res: Response, next: Next
         }
 
         //find user/seller in DB
-        const user = await prisma.users.findUnique({ where: {email}})
+        const user = userType === 'user' ? (
+            await prisma.users.findUnique({ where: {email}})
+        ) : (
+            await prisma.sellers.findUnique({ where: {email}})
+        )
 
         if(!user) throw new ValidationError(`${userType} not found!`);
 
@@ -96,7 +100,7 @@ export const handleForgotPassword = async(req:Request, res: Response, next: Next
         await trackOTPRequests(email, next);
 
         //generate otp and send mail
-        await sendOTP(user.name, email, "forgot-password-user-mail");
+        await sendOTP(user.name, email, userType === 'user'? "forgot-password-user-mail": "forgot-password-seller-mail");
 
         res.status(200).json({
             message: "OTP sent to email. Please verify your account."

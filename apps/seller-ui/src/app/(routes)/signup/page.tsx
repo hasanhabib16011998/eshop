@@ -7,27 +7,22 @@ import React, { useRef, useState } from 'react'
 import { useForm } from "react-hook-form";
 import axios, { AxiosError } from 'axios';
 import { countries } from '../../utils/countries';
+import CreateShop from 'apps/seller-ui/src/shared/modules/auth/create-shop';
 
-type FormData = {
-    name: string,
-    email: string,
-    password: string,
-    phone_number: string,
-    country:string,
-}
 
 export default function SignUp() {
-    const [activeStep, setActiveStep] = useState(1);
+    const [activeStep, setActiveStep] = useState(2);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [canResend, setCanResend] = useState(true);
     const [timer, setTimer] = useState(60);
     const [otp, setOtp] = useState(["", "", "", ""]);
     const [showOtp, setShowOtp] = useState(false);
-    const [userData, setUserData] = useState<FormData | null>(null);
+    const [sellerData, setSellerData] = useState<any>(null);
+    const [sellerId, setSellerId] = useState("");
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const router = useRouter();
 
-    const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
+    const { register, handleSubmit, formState: { errors } } = useForm<any>();
 
     const startResendTimer = () => {
         const interval = setInterval(() => {
@@ -43,12 +38,12 @@ export default function SignUp() {
     }
 
     const signUpMutation = useMutation({
-        mutationFn: async (data: FormData) => {
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/user-registration`, data);
+        mutationFn: async (data) => {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/seller-registration`, data);
             return response.data;
         },
         onSuccess: (_, formData) => {
-            setUserData(formData);
+            setSellerData(formData);
             setShowOtp(true);
             setCanResend(false);
             setTimer(60);
@@ -58,21 +53,22 @@ export default function SignUp() {
 
     const verifyOtpMutation = useMutation({
         mutationFn: async () => {
-            if (!userData) return;
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/verify-user`,
+            if (!sellerData) return;
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/verify-seller`,
                 {
-                    ...userData,
+                    ...sellerData,
                     otp: otp.join(""),
                 }
             );
             return response.data;
         },
-        onSuccess: () => {
-            router.push("/login");
+        onSuccess: (data) => {
+            setSellerId(data?.seller?.id);
+            setActiveStep(2);
         }
     })
 
-    const onSubmit = (data: FormData) => {
+    const onSubmit = (data:any) => {
         console.log(data);
         signUpMutation.mutate(data);
 
@@ -97,8 +93,8 @@ export default function SignUp() {
     };
 
     const resendOTP = () => {
-        if (userData) {
-            signUpMutation.mutate(userData);
+        if (sellerData) {
+            signUpMutation.mutate(sellerData);
         }
         console.log('OTP resent to your email')
     }
@@ -121,6 +117,7 @@ export default function SignUp() {
 
             {/* Steps Content */}
             <div className='md:w-[480px] p-8 bg-white-shadow rounded-lg'>
+                {/* Register as a seller */}
                 {activeStep === 1 && (
                     <>
                         {!showOtp ? (
@@ -303,6 +300,11 @@ export default function SignUp() {
                             </div>
                         )}
                     </>
+                )}
+
+                {/* Create Shop */}
+                {activeStep === 2 && (
+                    <CreateShop sellerId={sellerId} setActiveStep={setActiveStep}/>
                 )}
             </div>
 
