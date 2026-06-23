@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import React from 'react'
 import { useForm } from 'react-hook-form';
-import { shopCategories } from 'apps/seller-ui/src/app/utils/categories';
+import { shopCategories } from 'apps/seller-ui/src/utils/categories';
 
 const CreateShop = ({
     sellerId,
@@ -16,7 +16,7 @@ const CreateShop = ({
     const createShopMutation = useMutation({
         mutationFn: async (data: any) => {
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_SERVER_URI}/api/seller-registration`,
+                `${process.env.NEXT_PUBLIC_SERVER_URI}/api/create-shop`,
                 data,
             )
             return response.data;
@@ -92,13 +92,13 @@ const CreateShop = ({
                     type="text"
                     placeholder='e.g., Sun-Fri 9AM - 6PM'
                     className='w-full p-2 border border-gray-300 outline-0 !rounded mb-1'
-                    {...register("openning_hours", {
+                    {...register("opening_hours", {
                         required: "Shop opening hours is required",
                     })}
                 />
-                {errors.openning_hours && (
+                {errors.opening_hours && (
                     <p className='text-red-500 text-sm'>
-                        {String(errors.openning_hours.message)}
+                        {String(errors.opening_hours.message)}
                     </p>
                 )}
 

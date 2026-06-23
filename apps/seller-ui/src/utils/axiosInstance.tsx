@@ -13,20 +13,20 @@ let refreshSubscribers: (() => void)[] = [];
 const handleLogout = () => {
     // Define the routes where users shouldn't be redirected if they are unauthenticated
     const publicRoutes = ["/login", "/signup", "/forgot-password"];
-    
+
     if (!publicRoutes.includes(window.location.pathname)) {
         window.location.href = "/login";
     }
 };
 
 //handle adding a new access token to queued requests
-const subscribeTokenRefresh = (callback: ()=> void) => {
+const subscribeTokenRefresh = (callback: () => void) => {
     refreshSubscribers.push(callback);
 }
 
 //Execute queued requests after refresh
-const onRefreshSuccess = ()=> {
-    refreshSubscribers.forEach((callback)=>callback());
+const onRefreshSuccess = () => {
+    refreshSubscribers.forEach((callback) => callback());
     refreshSubscribers = [];
 }
 
@@ -36,21 +36,21 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 )
 
-//handle expred tokens and refresh logic
+//handle expired tokens and refresh logic
 axiosInstance.interceptors.response.use(
     (response) => response,
-    async(error) => {
+    async (error) => {
         const originalRequest = error.config;
 
         //prevent infinite retry loop
-        if(error.response?.status === 401 && !originalRequest._retry) {
-            if(isRefreshing) {
-                return new Promise((resolve)=> {
-                    subscribeTokenRefresh(()=> resolve(axiosInstance(originalRequest)));
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            if (isRefreshing) {
+                return new Promise((resolve) => {
+                    subscribeTokenRefresh(() => resolve(axiosInstance(originalRequest)));
                 });
             }
-        
-            originalRequest._retry=true;
+
+            originalRequest._retry = true;
             isRefreshing = true;
 
             try {

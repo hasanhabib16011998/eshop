@@ -2,16 +2,16 @@
 import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import React, { useRef, useState } from 'react'
 import { useForm } from "react-hook-form";
 import axios, { AxiosError } from 'axios';
-import { countries } from '../../utils/countries';
+import { countries } from '../../../utils/countries';
 import CreateShop from 'apps/seller-ui/src/shared/modules/auth/create-shop';
+import StripeLogo from '../../../assets/svgs/stripe';
 
 
 export default function SignUp() {
-    const [activeStep, setActiveStep] = useState(2);
+    const [activeStep, setActiveStep] = useState(1);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [canResend, setCanResend] = useState(true);
     const [timer, setTimer] = useState(60);
@@ -20,7 +20,6 @@ export default function SignUp() {
     const [sellerData, setSellerData] = useState<any>(null);
     const [sellerId, setSellerId] = useState("");
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-    const router = useRouter();
 
     const { register, handleSubmit, formState: { errors } } = useForm<any>();
 
@@ -98,6 +97,21 @@ export default function SignUp() {
         }
         console.log('OTP resent to your email')
     }
+
+    const connectStripe = async () => {
+        try {
+          const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_SERVER_URI}/api/create-stripe-link`,
+            { sellerId }
+          );
+      
+          if (response.data.url) {
+            window.location.href = response.data.url;
+          }
+        } catch (error) {
+          console.error("Stripe Connection Error:", error);
+        }
+    };
     return (
         <div className="w-full flex flex-col items-center pt-10 min-h-screen">
             {/* Stepper */}
@@ -305,6 +319,20 @@ export default function SignUp() {
                 {/* Create Shop */}
                 {activeStep === 2 && (
                     <CreateShop sellerId={sellerId} setActiveStep={setActiveStep}/>
+                )}
+
+                {/* Connect Stripe */}
+                {activeStep === 3 && (
+                    <div className="text-center">
+                        <h3 className="text-2xl font-semibold">Withdraw Method</h3>
+                        <br/>
+                        <button 
+                        className="w-full m-auto flex items-center justify-center gap-3 text-lg bg-[#435975] text-white py-2 rounded-lg"
+                        onClick={connectStripe}
+                        >
+                            Connect Stripe<StripeLogo/>
+                        </button>
+                    </div>
                 )}
             </div>
 
