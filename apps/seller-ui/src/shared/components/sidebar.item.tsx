@@ -15,7 +15,7 @@ const SidebarItem = ({icon, title, isActive, href}: Props) => {
             isActive && "scale-[.98] bg-[#0f3158] fill-blue-200 hover:bg-[#0f3158d6]"
         }`}>
             {icon}
-            <h5 className='text-slate-200 text-lg'>{title}</h5>
+            <h5 className='text-slate-200 text-md'>{title}</h5>
   
         </div>
       </Link>
