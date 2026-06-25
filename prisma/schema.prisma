@@ -12,6 +12,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model images {
   id      String    @id @default(auto()) @map("_id") @db.ObjectId
   file_id String
@@ -80,4 +81,25 @@ model sellers {
   updatedAt    DateTime @updatedAt
   shopId       String?  @db.ObjectId
   imagesId     String?  @db.ObjectId
+}
+
+
+//product service schemas
+model Category {
+  id            String        @id @default(uuid())
+  name          String        @unique
+  subCategories SubCategory[] // Relation to SubCategory
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model SubCategory {
+  id         String   @id @default(uuid())
+  name       String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([name, categoryId]) // Ensures a subcategory name is unique within its parent category
 }
