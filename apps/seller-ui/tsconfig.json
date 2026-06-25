@@ -28,10 +28,11 @@
       ]
     },
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": "../../",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": [
+    "../../packages/**/*.tsx", //add this line for including packages folder to seller app
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.js",
