@@ -1,4 +1,4 @@
 link:
 https://www.youtube.com/watch?v=XiD_TsGRQtE&list=PLyah27R0n8V5I965YCBjpXW3rdIxbj-zC&index=5
 time:
-9:52:07
+10:05:36
