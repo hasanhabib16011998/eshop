@@ -4,6 +4,9 @@ import { ChevronRight } from 'lucide-react'
 import Input from 'packages/components/input';
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import ColorSelector from 'packages/components/color-selector';
+import CustomSpecifications from 'packages/components/custom-specifications';
+
 
 export default function CreateProduct() {
     const { register, control, watch, setValue, handleSubmit, formState: { errors } } = useForm();
@@ -187,6 +190,14 @@ export default function CreateProduct() {
                                         {errors.brand.message as string}
                                     </p>
                                 )}
+                            </div>
+
+                            <div className="mt-2">
+                                <ColorSelector control={control} errors={errors}/>
+                            </div>
+
+                            <div className="mt-2">
+                                <CustomSpecifications control={control} errors={errors}/>
                             </div>
                         </div>
                     </div>
