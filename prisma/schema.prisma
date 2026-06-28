@@ -85,21 +85,21 @@ model sellers {
 
 
 //product service schemas
-model Category {
-  id            String        @id @default(uuid())
+model category {
+  id            String        @id @default(uuid()) @map("_id")
   name          String        @unique
-  subCategories SubCategory[] // Relation to SubCategory
+  subCategories subcategory[] // Relation to SubCategory
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
 
-model SubCategory {
-  id         String   @id @default(uuid())
+model subcategory {
+  id         String   @id @default(uuid()) @map("_id")
   name       String
   categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category   category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@unique([name, categoryId]) // Ensures a subcategory name is unique within its parent category
+  @@unique([name, categoryId])
 }

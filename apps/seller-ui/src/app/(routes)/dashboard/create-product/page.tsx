@@ -2,11 +2,13 @@
 import ImagePlaceHolder from 'apps/seller-ui/src/shared/components/image-placeholder';
 import { ChevronRight } from 'lucide-react'
 import Input from 'packages/components/input';
-import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import React, { useMemo, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import ColorSelector from 'packages/components/color-selector';
 import CustomSpecifications from 'packages/components/custom-specifications';
 import CustomProperties from 'packages/components/custom-properties';
+import { useQuery } from '@tanstack/react-query';
+import axiosInstance from 'apps/seller-ui/src/utils/axiosInstance';
 
 
 export default function CreateProduct() {
@@ -15,6 +17,39 @@ export default function CreateProduct() {
     const [isChanged, setIsChanged] = useState(false);
     const [images, setImages] = useState<(File | null)[]>([null]);
     const [loading, setLoading] = useState(false);
+
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ["categories"],
+        queryFn: async () => {
+            try {
+                const res = await axiosInstance.get("product/api/get-categories");
+                console.log(res.data);
+                return res.data;
+
+            } catch (error) {
+                console.log(error);
+                throw error;
+            }
+        },
+        staleTime: 1000 * 60 * 5,
+        retry: 2,
+    })
+
+    const categories = data?.categories || [];
+    const subCategoriesData = data?.subCategories || [];
+    const selectedCategory = watch("category");
+    const regularPrice = watch("regular_price");
+    const subcategories = useMemo(() => {
+        if (!selectedCategory) return [];
+        if (Array.isArray(subCategoriesData)) {
+            return subCategoriesData.filter((sub: any) =>
+                sub.categoryId === selectedCategory || sub.category === selectedCategory
+            );
+        }
+        return subCategoriesData[selectedCategory] || [];
+    }, [selectedCategory, subCategoriesData]);
+
+
 
     const onSubmit = (data: any) => {
         console.log(data);
@@ -170,7 +205,7 @@ export default function CreateProduct() {
                                             value: 50,
                                             message: "Slug cannot be longer than 50 characters."
                                         },
-                                        
+
                                     })}
                                 />
                                 {errors.slug && (
@@ -194,15 +229,15 @@ export default function CreateProduct() {
                             </div>
 
                             <div className="mt-2">
-                                <ColorSelector control={control} errors={errors}/>
+                                <ColorSelector control={control} errors={errors} />
                             </div>
 
                             <div className="mt-2">
-                                <CustomSpecifications control={control} errors={errors}/>
+                                <CustomSpecifications control={control} errors={errors} />
                             </div>
 
                             <div className="mt-2">
-                                <CustomProperties control={control} errors={errors}/>
+                                <CustomProperties control={control} errors={errors} />
                             </div>
 
                             <div className="mt-2">
@@ -215,7 +250,7 @@ export default function CreateProduct() {
                                     })}
                                     defaultValue="yes"
                                     className="w-full border outline-none border-gray-700 bg-transparent p-2 rounded-md"
-                                    >
+                                >
                                     <option value="yes" className="bg-black">
                                         Yes
                                     </option>
@@ -233,9 +268,78 @@ export default function CreateProduct() {
 
                         {/* Right column */}
                         <div className="w-2/4">
-                        <label className='block font-semibold text-gray-300 mb-1'>
-                            Category*
-                        </label>
+                            <label className='block font-semibold text-gray-300 mb-1'>
+                                Category*
+                            </label>
+                            {isLoading ? (
+                                <p className="text-gray-400">Loading Categories</p>
+                            ) : isError ? (
+                                <p className='text-red-500'>Failed to load categories</p>
+                            ) : (
+                                <Controller
+                                    name='category'
+                                    control={control}
+                                    rules={{ required: "Category is required" }}
+                                    render={({ field }) => (
+                                        <select
+                                            {...field}
+                                            className="w-full border outline-none border-gray-700 bg-transparent"
+                                        >
+                                            <option value="" className='bg-black'>Select Category</option>
+                                            {categories?.map((category: any) => {
+                                                const val = typeof category === 'object' ? category.id : category;
+                                                const label = typeof category === 'object' ? category.name : category;
+                                                return (
+                                                    <option value={val} key={val} className='bg-black'>
+                                                        {label}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                    )}
+                                />
+                            )}
+                            {errors.category && (
+                                <p className='text-red-500 text-xs mt-1'>
+                                    {errors.category.message as string}
+                                </p>
+                            )}
+
+                            {/* Sub Category */}
+                            <div className="mt-2">
+                                <label className='block font-semibold text-gray-300 mb-1'>
+                                    Sub Category*
+                                </label>
+                                {isLoading ? (
+                                    <p className="text-gray-400">Loading subcategories</p>
+                                ) : isError ? (
+                                    <p className='text-red-500'>Failed to load subcategories</p>
+                                ) : (
+                                    <Controller
+                                        name='subcategory'
+                                        control={control}
+                                        rules={{ required: "Subcategory is required" }}
+                                        render={({ field }) => (
+                                            <select
+                                                {...field}
+                                                className="w-full border outline-none border-gray-700 bg-transparent"
+                                            >
+                                                <option value="" className='bg-black'>Select Subcategory</option>
+                                                {subcategories?.map((subcategory: any) => {
+                                                    const val = typeof subcategory === 'object' ? subcategory.id : subcategory;
+                                                    const label = typeof subcategory === 'object' ? subcategory.name : subcategory;
+                                                    return (
+                                                        <option value={val} key={val} className='bg-black'>
+                                                            {label}
+                                                        </option>
+                                                    );
+                                                })}
+                                            </select>
+                                        )}
+                                    />
+                                )}
+                                
+                            </div>
                         </div>
                     </div>
                 </div>

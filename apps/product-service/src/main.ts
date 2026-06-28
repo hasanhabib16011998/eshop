@@ -2,6 +2,7 @@ import express from 'express';
 import cors from "cors";
 import { errorMiddleWare } from '@packages/error-handler/error-middleware';
 import cookieParser from 'cookie-parser';
+import router from './routes/product.router';
 // import swaggerUI from 'swagger-ui-express';
 // const swaggerDocument = require("./swagger-output.json");
 
@@ -25,7 +26,7 @@ app.get('/', (req, res) => {
 //     res.json(swaggerDocument);
 // })
 
-// app.use("/api", router)
+app.use("/api", router);
 
 app.use(errorMiddleWare);
 

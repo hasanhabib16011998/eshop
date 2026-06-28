@@ -13,7 +13,7 @@ export const getCategories = async (
       prisma.category.findMany({
         orderBy: { name: 'asc' }, // Optional: returns them in alphabetical order
       }),
-      prisma.subCategory.findMany({
+      prisma.subcategory.findMany({
         orderBy: { name: 'asc' },
       }),
     ]);
