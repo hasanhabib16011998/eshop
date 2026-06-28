@@ -9,6 +9,7 @@ import CustomSpecifications from 'packages/components/custom-specifications';
 import CustomProperties from 'packages/components/custom-properties';
 import { useQuery } from '@tanstack/react-query';
 import axiosInstance from 'apps/seller-ui/src/utils/axiosInstance';
+import RichTextEditor from 'packages/components/rich-text-editor';
 
 
 export default function CreateProduct() {
@@ -283,7 +284,7 @@ export default function CreateProduct() {
                                     render={({ field }) => (
                                         <select
                                             {...field}
-                                            className="w-full border outline-none border-gray-700 bg-transparent"
+                                            className="w-full p-2 border outline-none border-gray-700 bg-transparent"
                                         >
                                             <option value="" className='bg-black'>Select Category</option>
                                             {categories?.map((category: any) => {
@@ -322,7 +323,7 @@ export default function CreateProduct() {
                                         render={({ field }) => (
                                             <select
                                                 {...field}
-                                                className="w-full border outline-none border-gray-700 bg-transparent"
+                                                className="w-full p-2 border outline-none border-gray-700 bg-transparent"
                                             >
                                                 <option value="" className='bg-black'>Select Subcategory</option>
                                                 {subcategories?.map((subcategory: any) => {
@@ -338,7 +339,117 @@ export default function CreateProduct() {
                                         )}
                                     />
                                 )}
-                                
+
+                            </div>
+
+                            <div className="mt-2">
+                                <label className="block font-semibold text-gray-300 mb-1">
+                                    Detailed Description * (Min 100 words)
+                                </label>
+                                <Controller
+                                    name="detailed_description"
+                                    control={control}
+                                    rules={{
+                                        required: "Detailed description is required!",
+                                        validate: (value) => {
+                                            const wordCount = value
+                                                ?.split(/\s+/)
+                                                .filter((word: string) => word).length;
+                                            return (
+                                                wordCount >= 100 ||
+                                                "Description must be at least 100 words!"
+                                            );
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <RichTextEditor
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                        />
+                                    )}
+                                />
+
+                                {errors.detailed_description && (
+                                    <p className='text-red-500 text-xs mt-1'>
+                                        {errors.detailed_description.message as string}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="mt-2">
+                                <Input
+                                    label="Video URL"
+                                    placeholder='https://www.youtube.com/embed/xyz123'
+                                    {...register("video_url", {
+                                        pattern: {
+                                            value: /^https:\/\/(www\.)?youtube\.com\/embed\/[a-zA-Z0-9_-]+$/,
+                                            message: "Invalid youtube embed url! use format like: https://www.youtube.com/embed/xyz123"
+                                        }
+                                    })}
+                                />
+                                {errors.video_url && (
+                                    <p className='text-red-500 text-xs mt-1'>
+                                        {errors.video_url.message as string}
+                                    </p>
+                                )}
+
+                            </div>
+
+                            <div className="mt-2">
+                                <Input
+                                    label="Regular Price"
+                                    placeholder='20$'
+                                    {...register("regular_price", {
+                                        valueAsNumber: true,
+                                        min: { value: 1, message: "price must be at least 1." },
+                                        validate: (value) =>
+                                            !isNaN(value) || "Only numbers are allowed",
+                                    })}
+                                />
+                                {errors.regular_price && (
+                                    <p className='text-red-500 text-xs mt-1'>
+                                        {errors.regular_price.message as string}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="mt-2">
+                                <Input
+                                    label="Selling Price"
+                                    placeholder='20$'
+                                    {...register("sale_price", {
+                                        valueAsNumber: true,
+                                        min: { value: 1, message: "sale price must be at least 1." },
+                                        validate: (value) =>
+                                            !isNaN(value) || "Only numbers are allowed",
+                                    })}
+                                />
+                                {errors.sale_price && (
+                                    <p className='text-red-500 text-xs mt-1'>
+                                        {errors.sale_price.message as string}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="mt-2">
+                                <Input
+                                    label="Stock *"
+                                    placeholder='100'
+                                    {...register("stock", {
+                                        valueAsNumber: true,
+                                        min: { value: 1, message: "stock must be at least 1." },
+                                        validate: (value) => {
+                                            if (isNaN(value)) return "Only numbers are allowed!";
+                                            if(!Number.isInteger(value)) return "Stock must be a whole number!";
+                                            return true;
+                                        }
+                                    })}
+                                />
+                                {errors.stock && (
+                                    <p className='text-red-500 text-xs mt-1'>
+                                        {errors.stock.message as string}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
