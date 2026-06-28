@@ -10,12 +10,13 @@ import CustomProperties from 'packages/components/custom-properties';
 import { useQuery } from '@tanstack/react-query';
 import axiosInstance from 'apps/seller-ui/src/utils/axiosInstance';
 import RichTextEditor from 'packages/components/rich-text-editor';
+import SizeSelector from 'packages/components/size-selector';
 
 
 export default function CreateProduct() {
     const { register, control, watch, setValue, handleSubmit, formState: { errors } } = useForm();
     const [openImageModal, setOpenImageModal] = useState(false);
-    const [isChanged, setIsChanged] = useState(false);
+    const [isChanged, setIsChanged] = useState(true);
     const [images, setImages] = useState<(File | null)[]>([null]);
     const [loading, setLoading] = useState(false);
 
@@ -85,6 +86,10 @@ export default function CreateProduct() {
         });
 
         setValue("images", images);
+    }
+
+    const handleSaveDraft = () => {
+        console.log("Draft Saved");
     }
     return (
         <form
@@ -440,7 +445,7 @@ export default function CreateProduct() {
                                         min: { value: 1, message: "stock must be at least 1." },
                                         validate: (value) => {
                                             if (isNaN(value)) return "Only numbers are allowed!";
-                                            if(!Number.isInteger(value)) return "Stock must be a whole number!";
+                                            if (!Number.isInteger(value)) return "Stock must be a whole number!";
                                             return true;
                                         }
                                     })}
@@ -451,9 +456,41 @@ export default function CreateProduct() {
                                     </p>
                                 )}
                             </div>
+
+                            <div className="mt-2">
+                                <SizeSelector control={control} errors={errors} />
+                            </div>
+
+                            <div className="mt-3">
+                                <label className='block font-semibold text-gray-300 mb-1'>
+                                    Select Discount Codes (Optional)
+                                </label>
+                            </div>
                         </div>
+
+
                     </div>
                 </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+                {isChanged && (
+                    <button
+                        type="button"
+                        className='px-4 py-2  bg-gray-700 text-white rounded-md'
+                        onClick={handleSaveDraft}
+                    >
+                        Save Draft
+                    </button>
+                )}
+                <button
+                    type="submit"
+                    className='px-4 py-2  bg-blue-600 text-white rounded-md'
+                    disabled={loading}
+                    onClick={handleSaveDraft}
+                >
+                    {loading ? "Creating...":"Create"}
+                </button>
             </div>
 
 
