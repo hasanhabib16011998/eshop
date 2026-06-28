@@ -12,7 +12,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model images {
   id      String    @id @default(auto()) @map("_id") @db.ObjectId
   file_id String
@@ -83,7 +82,6 @@ model sellers {
   imagesId     String?  @db.ObjectId
 }
 
-
 //product service schemas
 model category {
   id            String        @id @default(uuid()) @map("_id")
@@ -102,4 +100,15 @@ model subcategory {
   updatedAt  DateTime @updatedAt
 
   @@unique([name, categoryId])
+}
+
+model discount_codes {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  public_name   String
+  discountType  String
+  discountValue Float
+  discountCode  String   @unique
+  sellerId      String   @db.ObjectId
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
