@@ -1,6 +1,6 @@
 "use client"
 import ImagePlaceHolder from 'apps/seller-ui/src/shared/components/image-placeholder';
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, X } from 'lucide-react'
 import Input from 'packages/components/input';
 import React, { useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
@@ -13,13 +13,21 @@ import RichTextEditor from 'packages/components/rich-text-editor';
 import SizeSelector from 'packages/components/size-selector';
 import { error } from 'node:console';
 import { resolve } from 'node:path';
+import Image from 'next/image';
+
+interface UploadedImage {
+    fileId: string;
+    file_url: string;
+}
 
 
 export default function CreateProduct() {
     const { register, control, watch, setValue, handleSubmit, formState: { errors } } = useForm();
     const [openImageModal, setOpenImageModal] = useState(false);
     const [isChanged, setIsChanged] = useState(true);
-    const [images, setImages] = useState<(File | null)[]>([null]);
+    const [selectedImage, setSelectedImage] = useState('');
+    const [pictureUploading, setPictureUploading] = useState(false);
+    const [images, setImages] = useState<(UploadedImage | null)[]>([null]);
     const [loading, setLoading] = useState(false);
 
     const { data, isLoading, isError } = useQuery({
@@ -78,42 +86,53 @@ export default function CreateProduct() {
 
     }
 
-    const handleImageChange = async(file: File | null, index: number) => {
+    const handleImageChange = async (file: File | null, index: number) => {
         if (!file) return;
+        setPictureUploading(true);
         try {
             const fileName = await convertFiletoBase64(file);
-            
-            const response = await axiosInstance.post("/product/api/upload-product-image", {fileName});
+            const response = await axiosInstance.post("/product/api/upload-product-image", { fileName });
             console.log(response.data);
 
-            const updatedImages = [...images];
-            updatedImages[index] = response.data.file_url;
+            const uploadedImage: UploadedImage = {
+                fileId: response.data.fileId,
+                file_url: response.data.file_url,
+            };
 
-            if(index === images.length -1 && updatedImages.length<8) {
+            const updatedImages = [...images];
+            updatedImages[index] = uploadedImage;
+
+            if (index === images.length - 1 && updatedImages.length < 8) {
                 updatedImages.push(null);
             }
             setImages(updatedImages);
-            setValue("images", updatedImages)
+            setValue("images", updatedImages);
         } catch (error) {
             console.log(error);
+        } finally {
+            setPictureUploading(false);
         }
 
     };
 
-    const handleRemoveImage = (index: number) => {
+    const handleRemoveImage = async (index: number) => {
         try {
             const updatedImages = [...images];
 
             const imageToDelete = updatedImages[index];
 
-            if(imageToDelete && typeof imageToDelete === "string") {
-                // delete the picture
+            if (imageToDelete && typeof imageToDelete === "object") {
+                await axiosInstance.delete("/product/api/delete-product-image", {
+                    data: {
+                        fileId: imageToDelete.fileId!,
+                    }
+                });
             }
 
             updatedImages.splice(index, 1);
 
             //add null placeholder
-            if(!updatedImages.includes(null) && updatedImages.length < 8){
+            if (!updatedImages.includes(null) && updatedImages.length < 8) {
                 updatedImages.push(null);
             };
             setImages(updatedImages);
@@ -145,12 +164,30 @@ export default function CreateProduct() {
             <div className="py-4 w-full flex gap-6">
                 <div className="md:w-[35%]">
                     {images?.length > 0 && (
-                        <ImagePlaceHolder setOpenImageModal={setOpenImageModal} size="765 x 850" small={false} index={0} onImageChange={handleImageChange} onRemove={handleRemoveImage} />
+                        <ImagePlaceHolder
+                            setOpenImageModal={setOpenImageModal}
+                            size="765 x 850"
+                            small={false}
+                            images={images}
+                            index={0}
+                            onImageChange={handleImageChange}
+                            setSelectedImage={setSelectedImage}
+                            onRemove={handleRemoveImage} />
                     )}
 
                     <div className='grid grid-cols-2 gap-3 mt-4'>
                         {images.slice(1).map((_, index) => (
-                            <ImagePlaceHolder setOpenImageModal={setOpenImageModal} size="765 x 850" small={true} key={index} index={index + 1} onImageChange={handleImageChange} onRemove={handleRemoveImage} />
+                            <ImagePlaceHolder
+                                setOpenImageModal={setOpenImageModal}
+                                size="765 x 850"
+                                pictureUploading={pictureUploading}
+                                small={true}
+                                images={images}
+                                key={index}
+                                index={index + 1}
+                                onImageChange={handleImageChange}
+                                setSelectedImage={setSelectedImage}
+                                onRemove={handleRemoveImage} />
                         ))}
                     </div>
                 </div>
@@ -531,6 +568,39 @@ export default function CreateProduct() {
                     </div>
                 </div>
             </div>
+
+            {/* Enhance Image */}
+            {openImageModal && (
+                <div className="fixed top-0 left-0 h-full w-full flex items-center justify-center bg-black bg-opacity-60 z-2">
+                    <div className="bg-gray-800 p-6 rounded-lg w-[450px] text-white">
+                        <div className="flex justify-between items-center pb-3 mb-4">
+                            <h2 className="text-lg font-semibold">Enhance Product Image</h2>
+                            <X
+                                size={20}
+                                className='cursor-pointer'
+                                onClick={() => setOpenImageModal(!openImageModal)}
+                            />
+                        </div>
+
+                        <div className="relativew-full h-[250px] rounded-md overflow-hidden border border-gray-600">
+                            <Image
+                                src={selectedImage}
+                                alt="product-image"
+                                layout='fill'
+                            />
+                        </div>
+                        {selectedImage && (
+                            <div className="mt-4 space-y-2">
+                                <h3 className="text-white text-sm font-semibold">
+                                    AI Enhancements
+                                </h3>
+                                <div className="grid grid-cols-2 gap-3 mx-h-[250px] overflow-y-auto"></div>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            )}
 
             <div className="mt-6 flex justify-end gap-3">
                 {isChanged && (

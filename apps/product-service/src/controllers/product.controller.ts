@@ -142,7 +142,26 @@ export const uploadProductImage = async (
 
     res.status(201).json({
       file_url: response.url,
-      fileName: response.fileId,
+      fileId: response.fileId,
+    })
+  } catch (error) {
+    next(error);
+  }
+}
+
+//delete product picture
+export const deleteProductImage = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {fileId} = req.body;
+    const response = await imageKitClient.files.delete(fileId);
+
+    res.status(201).json({
+      success:true,
+      response
     })
   } catch (error) {
     next(error);
