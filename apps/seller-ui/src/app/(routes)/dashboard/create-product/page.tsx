@@ -11,6 +11,8 @@ import { useQuery } from '@tanstack/react-query';
 import axiosInstance from 'apps/seller-ui/src/utils/axiosInstance';
 import RichTextEditor from 'packages/components/rich-text-editor';
 import SizeSelector from 'packages/components/size-selector';
+import { error } from 'node:console';
+import { resolve } from 'node:path';
 
 
 export default function CreateProduct() {
@@ -64,37 +66,61 @@ export default function CreateProduct() {
 
     const onSubmit = (data: any) => {
         console.log(data);
+    };
+
+    const convertFiletoBase64 = (file: File) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+        })
+
     }
 
-    const handleImageChange = (file: File | null, index: number) => {
-        const updatedImages = [...images];
+    const handleImageChange = async(file: File | null, index: number) => {
+        if (!file) return;
+        try {
+            const fileName = await convertFiletoBase64(file);
+            
+            const response = await axiosInstance.post("/product/api/upload-product-image", {fileName});
+            console.log(response.data);
 
-        updatedImages[index] = file;
-        if (index === images.length - 1 && images.length < 8) {
-            updatedImages.push(null);
+            const updatedImages = [...images];
+            updatedImages[index] = response.data.file_url;
+
+            if(index === images.length -1 && updatedImages.length<8) {
+                updatedImages.push(null);
+            }
+            setImages(updatedImages);
+            setValue("images", updatedImages)
+        } catch (error) {
+            console.log(error);
         }
-
-        setImages(updatedImages);
-        setValue('images', updatedImages);
 
     };
 
     const handleRemoveImage = (index: number) => {
-        setImages((prevImages) => {
-            let updatedImages = [...prevImages];
-            if (index === -1) {
-                updatedImages[0] = null;
-            } else {
-                updatedImages.splice(index, 1);
+        try {
+            const updatedImages = [...images];
+
+            const imageToDelete = updatedImages[index];
+
+            if(imageToDelete && typeof imageToDelete === "string") {
+                // delete the picture
             }
 
-            if (!updatedImages.includes(null) && updatedImages.length < 8) {
+            updatedImages.splice(index, 1);
+
+            //add null placeholder
+            if(!updatedImages.includes(null) && updatedImages.length < 8){
                 updatedImages.push(null);
-            }
-            return updatedImages;
-        });
-
-        setValue("images", images);
+            };
+            setImages(updatedImages);
+            setValue("images", updatedImages);
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     const handleSaveDraft = () => {
@@ -481,17 +507,17 @@ export default function CreateProduct() {
                                     </p>
                                 ) : (
                                     <div className="flex flex-wrap gap-2">
-                                        {discountCodes?.map((code:any) => (
+                                        {discountCodes?.map((code: any) => (
                                             <button
-                                            key={code.id}
-                                            className={`px-3 py-1 rounded-md text-sm font-semibold border ${watch("discountCodes")?.includes(code.id) ? "bg-blue-600 text-white border-blue-600":"bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700"}`}
-                                            onClick={()=>{
-                                                const currentSelection = watch("discountCodes") || [];
-                                                const updatedSelection = currentSelection?.includes(code.id)
-                                                ? currentSelection.filter((id:string) => id !== code.id)
-                                                : [...currentSelection, code.id];
-                                                setValue("discountCodes", updatedSelection);
-                                            }}
+                                                key={code.id}
+                                                className={`px-3 py-1 rounded-md text-sm font-semibold border ${watch("discountCodes")?.includes(code.id) ? "bg-blue-600 text-white border-blue-600" : "bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700"}`}
+                                                onClick={() => {
+                                                    const currentSelection = watch("discountCodes") || [];
+                                                    const updatedSelection = currentSelection?.includes(code.id)
+                                                        ? currentSelection.filter((id: string) => id !== code.id)
+                                                        : [...currentSelection, code.id];
+                                                    setValue("discountCodes", updatedSelection);
+                                                }}
                                             >
                                                 {code?.public_name} ({code.discountValue} {code.discountType === "percentage" ? "%" : "$"})
                                             </button>
@@ -522,7 +548,7 @@ export default function CreateProduct() {
                     disabled={loading}
                     onClick={handleSaveDraft}
                 >
-                    {loading ? "Creating...":"Create"}
+                    {loading ? "Creating..." : "Create"}
                 </button>
             </div>
 
