@@ -8,9 +8,13 @@ import toast from "react-hot-toast";
 import { Controller, useForm } from 'react-hook-form';
 import Input from 'packages/components/input';
 import { AxiosError } from 'axios';
+import DeleteDiscountCodeModal from 'apps/seller-ui/src/shared/components/modals/delete-discount-modal';
 
 const DiscountCodes = () => {
     const [showModal, setShowModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedDiscount, setSelectedDiscount] = useState<any>();
+
     const queryClient = useQueryClient();
 
     const { data: discountCodes = [], isLoading } = useQuery({
@@ -21,7 +25,7 @@ const DiscountCodes = () => {
         }
     });
 
-    const { register, handleSubmit, control, reset, formState: {errors} } = useForm({
+    const { register, handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
             public_name: "",
             discountType: "percentage",
@@ -31,22 +35,33 @@ const DiscountCodes = () => {
     });
 
     const createDiscountCodeMutation = useMutation({
-        mutationFn: async(data) => {
+        mutationFn: async (data) => {
             await axiosInstance.post("/product/api/create-discount-code", data);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["shop-discounts"]});
+            queryClient.invalidateQueries({ queryKey: ["shop-discounts"] });
             reset();
             setShowModal(false);
+        }
+    });
+
+    const deleteDiscountCodeMutation = useMutation({
+        mutationFn: async (discountId) => {
+            await axiosInstance.delete(`/product/api/delete-discount-code/${discountId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["shop-discounts"] });
+            setShowDeleteModal(false);
         }
     })
 
     const handleDeleteDiscount = async (discount: any) => {
-        console.log("deleted discount code");
+        setSelectedDiscount(discount);
+        setShowDeleteModal(true);
     };
 
     const onSubmit = (data: any) => {
-        if(discountCodes.length >= 8) {
+        if (discountCodes.length >= 8) {
             toast.error("You can only create up to 8 discount codes.");
             return;
         }
@@ -57,10 +72,11 @@ const DiscountCodes = () => {
             <div className="flex justify-between items-center mb-1">
                 <h2 className="text-2xl text-white font-semibold">Discount Codes</h2>
                 <button
-                    className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md"
+                    className="flex items-center gap-2 text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md"
                     onClick={() => setShowModal(true)}
                 >
-                    <Plus size={18} />Create Discount
+                    <Plus size={18} />
+                    <span>Create Discount</span>
                 </button>
             </div>
 
@@ -122,18 +138,18 @@ const DiscountCodes = () => {
                 <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-[450px]">
                         <div className="flex justify-between items-center border-b border-gray-700 pb-3">
-                          <h3 className="text-xl text-white">Create Discount Code</h3> 
-                          <button
-                          onClick={() => setShowModal(false)}
-                          className="text-gray-400 hover:text-white">
-                            <X size={22}/>
-                          </button>
+                            <h3 className="text-xl text-white">Create Discount Code</h3>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="text-gray-400 hover:text-white">
+                                <X size={22} />
+                            </button>
                         </div>
 
                         <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
                             {/* Title */}
                             <Input label="Title (Public Name)"
-                            {...register("public_name", { required: "Title is required"})}/>
+                                {...register("public_name", { required: "Title is required" })} />
                             {errors.public_name && (
                                 <p className="text-red-500 text-xs mt-1">
                                     {errors.public_name.message}
@@ -145,54 +161,63 @@ const DiscountCodes = () => {
                                     Discount Type
                                 </label>
                                 <Controller
-                                control={control}
-                                name='discountType'
-                                render={({field}) => (
-                                    <select 
-                                    {...field}
-                                    className='w-full border outline-none border-gray-700 bg-transparent'>
-                                        <option value="percentage">Percentage(%)</option>
-                                        <option value="flat">Flat Amount (%)</option>
-                                    </select>
-                                )}
+                                    control={control}
+                                    name='discountType'
+                                    render={({ field }) => (
+                                        <select
+                                            {...field}
+                                            className='w-full p-2 border outline-none border-gray-700 bg-transparent'>
+                                            <option value="percentage">Percentage(%)</option>
+                                            <option value="flat">Flat Amount (%)</option>
+                                        </select>
+                                    )}
                                 />
                             </div>
 
                             <div className="mt-2">
-                            <Input label="Discount Value" type='number' min={1}
-                            {...register("discountValue", { required: "Value is required"})}/>
-                            {errors.discountValue && (
-                                <p className="text-red-500 text-xs mt-1">
-                                    {errors.discountValue.message}
-                                </p>
-                            )}
+                                <Input label="Discount Value" type='number' min={1}
+                                    {...register("discountValue", { required: "Value is required" })} />
+                                {errors.discountValue && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {errors.discountValue.message}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="mt-2">
-                            <Input label="Discount Code" type='text'
-                            {...register("discountCode", { required: "Discount code is required"})}/>
+                                <Input label="Discount Code" type='text'
+                                    {...register("discountCode", { required: "Discount code is required" })} />
                             </div>
 
-                            <button 
-                            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold flex items-center justify-center gap-2"
-                            disabled={createDiscountCodeMutation.isPending}
+                            <button
+                                className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold flex items-center justify-center gap-2"
+                                disabled={createDiscountCodeMutation.isPending}
                             >
-                                <Plus size={18}/>
-                                {createDiscountCodeMutation?.isPending ? "Creating...": "Create"}
+                                <Plus size={18} />
+                                {createDiscountCodeMutation?.isPending ? "Creating..." : "Create"}
                             </button>
 
                             {createDiscountCodeMutation.isError && (
                                 <p className="text-red-500 text-sm mt-2">
                                     {(
-                                        createDiscountCodeMutation.error as AxiosError<{message: string}>
+                                        createDiscountCodeMutation.error as AxiosError<{ message: string }>
                                     )?.response?.data?.message || "Something went wrong"}
                                 </p>
                             )}
 
-                            
+
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* Delete Discount Modal */}
+            {showDeleteModal && selectedDiscount && (
+                <DeleteDiscountCodeModal
+                    discount={selectedDiscount}
+                    onClose={() => setShowDeleteModal(false)}
+                    onConfirm={() => deleteDiscountCodeMutation.mutate(selectedDiscount?.id)}
+                />
             )}
         </div>
     )
