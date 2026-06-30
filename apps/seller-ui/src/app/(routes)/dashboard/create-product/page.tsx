@@ -11,9 +11,9 @@ import { useQuery } from '@tanstack/react-query';
 import axiosInstance from 'apps/seller-ui/src/utils/axiosInstance';
 import RichTextEditor from 'packages/components/rich-text-editor';
 import SizeSelector from 'packages/components/size-selector';
-import { error } from 'node:console';
-import { resolve } from 'node:path';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 interface UploadedImage {
     fileId: string;
@@ -29,6 +29,8 @@ export default function CreateProduct() {
     const [pictureUploading, setPictureUploading] = useState(false);
     const [images, setImages] = useState<(UploadedImage | null)[]>([null]);
     const [loading, setLoading] = useState(false);
+
+    const router = useRouter();
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ["categories"],
@@ -72,8 +74,19 @@ export default function CreateProduct() {
 
 
 
-    const onSubmit = (data: any) => {
-        console.log(data);
+    const onSubmit = async (data: any) => {
+        try {
+            setLoading(true);
+            const response = await axiosInstance.post("/product/api/create-product", data);
+            console.log(response.data);
+            toast.success("Product created successfully!");
+            router.push("/dashboard/all-products");
+
+        } catch (error: any) {
+            toast.error(error?.data?.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const convertFiletoBase64 = (file: File) => {
@@ -169,6 +182,7 @@ export default function CreateProduct() {
                             size="765 x 850"
                             small={false}
                             images={images}
+                            pictureUploading={pictureUploading}
                             index={0}
                             onImageChange={handleImageChange}
                             setSelectedImage={setSelectedImage}
@@ -221,7 +235,7 @@ export default function CreateProduct() {
                                     cols={10}
                                     label="Short Description * (Max 150 words)"
                                     placeholder="Enter product description for quick view"
-                                    {...register("description", {
+                                    {...register("short_description", {
                                         required: "Description is required",
                                         validate: (value) => {
                                             const wordCount = value.trim().split(/\s+/).length;
@@ -232,9 +246,9 @@ export default function CreateProduct() {
                                         },
                                     })}
                                 />
-                                {errors.description && (
+                                {errors.short_description && (
                                     <p className='text-red-500 text-xs mt-1'>
-                                        {errors.description.message as string}
+                                        {errors.short_description.message as string}
                                     </p>
                                 )}
                             </div>
@@ -428,15 +442,6 @@ export default function CreateProduct() {
                                     control={control}
                                     rules={{
                                         required: "Detailed description is required!",
-                                        validate: (value) => {
-                                            const wordCount = value
-                                                ?.split(/\s+/)
-                                                .filter((word: string) => word).length;
-                                            return (
-                                                wordCount >= 100 ||
-                                                "Description must be at least 100 words!"
-                                            );
-                                        },
                                     }}
                                     render={({ field }) => (
                                         <RichTextEditor
@@ -616,7 +621,6 @@ export default function CreateProduct() {
                     type="submit"
                     className='px-4 py-2  bg-blue-600 text-white rounded-md'
                     disabled={loading}
-                    onClick={handleSaveDraft}
                 >
                     {loading ? "Creating..." : "Create"}
                 </button>

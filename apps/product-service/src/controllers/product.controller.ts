@@ -1,4 +1,4 @@
-import { NotFoundError, ValidationError } from "@packages/error-handler";
+import { AuthError, NotFoundError, ValidationError } from "@packages/error-handler";
 import { imageKitClient } from "@packages/libs/imagekit";
 import prisma from "@packages/libs/prisma";
 import { NextFunction, Request, Response } from "express";
@@ -44,11 +44,11 @@ export const createDiscountCodes = async (
       }
     })
 
-    if(isDiscountCodeExist) {
+    if (isDiscountCodeExist) {
       return next(new ValidationError("Discount code already exists, please use a different code!"))
     }
 
-    const discount_code= await prisma.discount_codes.create({
+    const discount_code = await prisma.discount_codes.create({
       data: {
         public_name,
         discountType,
@@ -75,7 +75,7 @@ export const getDiscountCodes = async (
   next: NextFunction
 ) => {
   try {
-    const discount_codes= await prisma.discount_codes.findMany({
+    const discount_codes = await prisma.discount_codes.findMany({
       where: {
         sellerId: req.seller.id,
       }
@@ -98,19 +98,19 @@ export const deleteDiscountCode = async (
   next: NextFunction
 ) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const sellerId = req.seller?.id;
 
     const discountCode = await prisma.discount_codes.findUnique({
-      where: {id},
+      where: { id },
       select: { id: true, sellerId: true },
     });
 
-    if(!discountCode) {
+    if (!discountCode) {
       return next(new NotFoundError("Discount code not found!"))
     }
 
-    if(discountCode.sellerId !== sellerId) {
+    if (discountCode.sellerId !== sellerId) {
       return next(new ValidationError("Unauthorized access!"))
     }
 
@@ -134,7 +134,7 @@ export const uploadProductImage = async (
   next: NextFunction
 ) => {
   try {
-    const {fileName} = req.body;
+    const { fileName } = req.body;
     const response = await imageKitClient.files.upload({
       file: fileName,
       fileName: `product-${Date.now()}.jpg`,
@@ -156,12 +156,113 @@ export const deleteProductImage = async (
   next: NextFunction
 ) => {
   try {
-    const {fileId} = req.body;
+    const { fileId } = req.body;
     const response = await imageKitClient.files.delete(fileId);
 
     res.status(201).json({
-      success:true,
+      success: true,
       response
+    })
+  } catch (error) {
+    next(error);
+  }
+}
+
+//create product
+export const createProduct = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      title,
+      slug,
+      category,
+      subcategory,
+      short_description,
+      detailed_description,
+      images = [],
+      video_url,
+      tags,
+      brand,
+      colors = [],
+      sizes = [],
+      stock,
+      sale_price,
+      regular_price,
+      warrenty,
+      custom_specifications,
+      customProperties,
+      cash_on_delivery,
+      discountCodes = [],
+    } = req.body;
+
+    if (
+      !title ||
+      !slug ||
+      !short_description ||
+      !detailed_description ||
+      !category ||
+      !subcategory ||
+      !sale_price ||
+      !regular_price ||
+      !stock ||
+      !tags
+    ) {
+      return next(new ValidationError("Missing Required Fields"));
+    }
+
+    if (!req.seller.id) {
+      return next(new AuthError("Only seller can create products"));
+    }
+
+    const slugChecking = await prisma.products.findUnique({
+      where: {
+        slug,
+      }
+    });
+
+    if (slugChecking) {
+      return next(new ValidationError("Slug already exists! Please use a different slug!"))
+    };
+
+    const newProduct = await prisma.products.create({
+      data: {
+        title,
+        short_description,
+        detailed_description,
+        warrenty,
+        cashOnDelivery: cash_on_delivery,
+        slug,
+        shopId: req.seller?.shop?.id!,
+        tags: Array.isArray(tags) ? tags : tags.split(","),
+        brand,
+        video_url,
+        category,
+        subcategory,
+        colors: colors || [],
+        discount_codes: discountCodes.map((codeId: string) => codeId),
+        sizes: sizes || [],
+        stock: parseInt(stock),
+        sale_price: parseFloat(sale_price),
+        regular_price: parseFloat(regular_price),
+        custom_properties: customProperties || {},
+        custom_specifications: custom_specifications || {},
+        images: {
+          create: images.filter((img: any) => img && img.fileId && img.file_url)
+            .map((img: any) => ({
+              file_id: img.fileId,
+              url: img.file_url,
+            }))
+        }
+      },
+      include: { images: true },
+    });
+
+    res.status(201).json({
+      success: true,
+      newProduct,
     })
   } catch (error) {
     next(error);
