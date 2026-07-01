@@ -6,10 +6,19 @@ import Link from 'next/link';
 import axiosInstance from 'apps/seller-ui/src/utils/axiosInstance';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
+import DeleteConfirmationModal from 'apps/seller-ui/src/shared/components/modals/delete-confirmation-modal';
 
 const fetchProducts = async () => {
     const res = await axiosInstance.get("product/api/get-shop-products");
     return res?.data?.products;
+}
+
+const deleteProduct = async (productId: string) => {
+    await axiosInstance.delete(`/product/api/delete-product/${productId}`);
+}
+
+const restoreProduct = async (productId: string) => {
+    await axiosInstance.put(`/product/api/restore-product/${productId}`);
 }
 
 const ProductList = () => {
@@ -25,6 +34,26 @@ const ProductList = () => {
         queryFn: fetchProducts,
         staleTime: 1000 * 60 * 5,
     });
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteProduct,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["shop-products"]
+            });
+            setShowDeleteModal(false);
+        }
+    });
+
+    const restoreMutation = useMutation({
+        mutationFn: restoreProduct,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["shop-products"]
+            });
+            setShowDeleteModal(false);
+        }
+    })
 
     const columns = useMemo(() => [
         {
@@ -91,7 +120,7 @@ const ProductList = () => {
         },
         {
             header: "Actions",
-            cell: ({ row }: any) => (
+            cell: ({ row }: {row:any}) => (
                 <div className="flex gap-3">
                     <Link
                         href={`/product/${row.original.id}`}
@@ -113,6 +142,7 @@ const ProductList = () => {
                     </button>
                     <button
                         className="text-red-400 hover:text-red-300 transition"
+                        onClick={()=>openDeleteModal(row.original)}
                     >
                         <Trash size={18} />
                     </button>
@@ -129,7 +159,12 @@ const ProductList = () => {
         globalFilterFn: "includesString",
         state: { globalFilter },
         onGlobalFilterChange: setGlobalFilter,
-    })
+    });
+
+    const openDeleteModal = (product: any) => {
+        setSelectedProduct(product);
+        setShowDeleteModal(true);
+    }
 
     return (
         <div className='w-full min-h-screen p-8'>
@@ -207,7 +242,15 @@ const ProductList = () => {
                             ))}
                         </tbody>
                     </table>
+                )}
 
+                {showDeleteModal && (
+                    <DeleteConfirmationModal 
+                    product={selectedProduct}
+                    onClose={()=>setShowDeleteModal(false)}
+                    onConfirm={()=> deleteMutation.mutate(selectedProduct?.id)}
+                    onRestore={()=> restoreMutation.mutate(selectedProduct?.id)}
+                    />
                 )}
             </div>
 
