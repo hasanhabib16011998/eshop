@@ -149,6 +149,7 @@ model products {
   cashOnDelivery        String?
   discount_codes        String[]      @db.ObjectId
   status                productStatus @default(Active)
+  totalSales            Int           @default(0)
   deletedAt             DateTime?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt

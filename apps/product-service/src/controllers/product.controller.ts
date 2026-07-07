@@ -414,13 +414,11 @@ export const getAllProducts = async (
 
     const baseFilter = {
       OR: [
-        {
-          starting_date:null,
-        },
-        {
-          ending_date: null,
-        },
-      ]
+        { starting_date: null },
+        { starting_date: { isSet: false } },
+        { ending_date: null },
+        { ending_date: { isSet: false } },
+      ],
     };
 
     const orderBy: Prisma.productsOrderByWithRelationInput = 
