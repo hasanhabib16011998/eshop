@@ -1,6 +1,7 @@
 import { AuthError, NotFoundError, ValidationError } from "@packages/error-handler";
 import { imageKitClient } from "@packages/libs/imagekit";
 import prisma from "@packages/libs/prisma";
+import { Prisma } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 
 // get product categories
@@ -269,7 +270,7 @@ export const createProduct = async (
   }
 }
 
-//fetch all products
+//fetch all shop products
 export const getShopProducts = async (
   req: any,
   res: Response,
@@ -396,5 +397,68 @@ export const restoreProduct = async (
     })
   } catch (error) {
     return next(error);
+  }
+}
+
+//get all products
+export const getAllProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const page = parseInt(req.query.page as string )|| 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page-1) * limit;
+    const type = req.query.type;
+
+    const baseFilter = {
+      OR: [
+        {
+          starting_date:null,
+        },
+        {
+          ending_date: null,
+        },
+      ]
+    };
+
+    const orderBy: Prisma.productsOrderByWithRelationInput = 
+    type === "latest"
+    ? { createdAt: "desc" as Prisma.SortOrder }
+    : { totalSales: "desc" as Prisma.SortOrder };
+
+    const [products, total, top10Products] = await Promise.all([
+      prisma.products.findMany({
+        skip,
+        take: limit,
+        include: {
+          images: true,
+          Shop: true,
+        },
+        where: baseFilter,
+        orderBy: {
+          totalSales: "desc",
+        },
+      }),
+
+      prisma.products.count({ where: baseFilter }),
+      prisma.products.findMany({
+        take: 10,
+        where: baseFilter,
+        orderBy,
+      }),
+    ]);
+
+    res.status(200).json({
+      products,
+      top10By: type === "latest"? "latest":"topSales",
+      top10Products,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total/limit),
+    })
+  } catch (error) {
+    next(error);
   }
 }

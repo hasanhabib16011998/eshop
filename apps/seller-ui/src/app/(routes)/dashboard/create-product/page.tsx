@@ -61,7 +61,7 @@ export default function CreateProduct() {
     const categories = data?.categories || [];
     const subCategoriesData = data?.subCategories || [];
     const selectedCategory = watch("category");
-    const regularPrice = watch("regular_price");
+    //const regularPrice = watch("regular_price");
     const subcategories = useMemo(() => {
         if (!selectedCategory) return [];
         if (Array.isArray(subCategoriesData)) {
