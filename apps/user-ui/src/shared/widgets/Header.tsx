@@ -6,9 +6,12 @@ import { UserRound } from 'lucide-react';
 import HeaderBottom from './HeaderBottom';
 import Logo from '../../assets/images/Logo';
 import useUser from '../../hooks/useUser';
+import { useStore } from '../../store';
 
 function Header() {
 const { user, isLoading } = useUser();
+const wishlist = useStore((state: any) => state.wishlist);
+const cart = useStore((state: any) => state.cart);
 
   return (
     <div className='w-full bg-white'>
@@ -69,7 +72,7 @@ const { user, isLoading } = useUser();
           <Link href={'/wishlist'} className='relative'>
             <HeartIcon/>
             <div className='flex w-6 h-6 border-2 border-white bg-red-500 rounded-full items-center justify-center absolute top-[-10px] right-[-10px]'>
-              <span className='text-white font-medium text-sm'>9</span>
+              <span className='text-white font-medium text-sm'>{wishlist?.length}</span>
             </div>
           </Link>
         </div>
@@ -77,7 +80,7 @@ const { user, isLoading } = useUser();
           <Link href={'/cart'} className='relative'>
             <ShoppingCart/>
             <div className='flex w-6 h-6 border-2 border-white bg-red-500 rounded-full items-center justify-center absolute top-[-10px] right-[-10px]'>
-              <span className='text-white font-medium text-sm'>6</span>
+              <span className='text-white font-medium text-sm'>{cart?.length}</span>
             </div>
           </Link>
         </div>

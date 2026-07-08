@@ -4,11 +4,14 @@ import {AlignLeft, ChevronDown, UserRound, HeartIcon, ShoppingCart} from 'lucide
 import { navItems } from '../../configs/constants';
 import Link from 'next/link';
 import useUser from '../../hooks/useUser';
+import { useStore } from '../../store';
 
 export default function HeaderBottom() {
     const [show, setShow] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
     const { user } = useUser();
+    const wishlist = useStore((state: any) => state.wishlist);
+    const cart = useStore((state: any) => state.cart);
 
     //track scroll position
     useEffect(()=> {
@@ -78,7 +81,7 @@ export default function HeaderBottom() {
                       <Link href={'/wishlist'} className='relative'>
                         <HeartIcon/>
                         <div className='flex w-6 h-6 border-2 border-white bg-red-500 rounded-full items-center justify-center absolute top-[-10px] right-[-10px]'>
-                          <span className='text-white font-medium text-sm'>9</span>
+                          <span className='text-white font-medium text-sm'>{wishlist?.length}</span>
                         </div>
                       </Link>
                     </div>
@@ -88,7 +91,7 @@ export default function HeaderBottom() {
                       <Link href={'/cart'} className='relative'>
                         <ShoppingCart/>
                         <div className='flex w-6 h-6 border-2 border-white bg-red-500 rounded-full items-center justify-center absolute top-[-10px] right-[-10px]'>
-                          <span className='text-white font-medium text-sm'>6</span>
+                          <span className='text-white font-medium text-sm'>{cart?.length}</span>
                         </div>
                       </Link>
                     </div>

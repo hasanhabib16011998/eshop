@@ -3,14 +3,29 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import Ratings from '../ratings';
-import { Heart, MapPin, ShoppingCart, X } from 'lucide-react';
+import { DatabaseBackup, Heart, MapPin, ShoppingCart, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import useLocationTracking from 'apps/user-ui/src/hooks/useLocationTracking';
+import useDeviceTracking from 'apps/user-ui/src/hooks/useDeviceTracking';
+import { useStore } from 'apps/user-ui/src/store';
+import useUser from 'apps/user-ui/src/hooks/useUser';
 
 const ProductDetailsCard = ({ data, setOpen }: { data: any; setOpen: (open: boolean) => void; }) => {
   const [activeImage, setActiveImage] = useState(0);
   const [isSelected, setIsSelected] = useState(data?.colors?.[0] || "");
   const [isSizeSelected, setIsSizeSelected] = useState(data?.sizes?.[0] || "");
   const [quantity, setQuantity] = useState(1);
+  const {user} = useUser();
+  const location = useLocationTracking();
+  const deviceInfo = useDeviceTracking();
+  const addToCart = useStore((state: any) => state.addToCart);
+  const removeFromCart = useStore((state: any) => state.removeFromCart);
+  const addToWishlist = useStore((state: any) => state.addToWishlist);
+  const removeFromWishlist = useStore((state: any) => state.removeFromWishlist);
+  const wishlist = useStore((state: any) => state.wishlist);
+  const isWishlisted = wishlist.some((item: any) => item.id === data.id);
+  const cart = useStore((state: any) => state.cart);
+  const isInCart = cart.some((item: any) => item.id === data.id);
 
   const estimatedDelivery = new Date();
   estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
@@ -172,14 +187,41 @@ const ProductDetailsCard = ({ data, setOpen }: { data: any; setOpen: (open: bool
                       </div>
 
                       {/* Add to Cart */}
-                      <button className={`flex-1 flex justify-center items-center gap-2 px-6 py-3 bg-[#ff5722] hover:bg-[#e64a19] text-white font-semibold rounded-lg transition shadow-sm`}>
+                      <button 
+                      className={`flex-1 flex justify-center items-center gap-2 px-6 py-3 text-white font-semibold rounded-lg transition shadow-sm ${
+                        isInCart 
+                          ? "bg-green-600 hover:bg-green-700 cursor-default" 
+                          : "bg-[#ff5722] hover:bg-[#e64a19] cursor-pointer"
+                      }`}
+                      disabled={isInCart}
+                      onClick={() => 
+                        addToCart({ ...data, quantity, selectedOptions: {
+                          color: isSelected,
+                          size: isSizeSelected,
+                        }}, user, location, deviceInfo)
+                      }
+                      >
                         <ShoppingCart size={20}/>
-                        Add to Cart
+                        {isInCart ? "Added to Cart" : "Add to Cart"}
                       </button>
 
                       {/* Wishlist */}
-                      <button className='p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer group'>
-                        <Heart className="group-hover:fill-red-500 group-hover:text-red-500 text-gray-400 transition" size={24} />
+                      <button 
+                        className='p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer group'
+                        onClick={() => isWishlisted
+                          ? removeFromWishlist(data.id, user, location, deviceInfo)
+                          : addToWishlist({ ...data, quantity, selectedOptions: {
+                              color: isSelected,
+                              size: isSizeSelected,
+                          }}, user, location, deviceInfo)
+                        }
+                      >
+                        <Heart 
+                          className="transition" 
+                          size={24} 
+                          fill={isWishlisted ? "red" : "transparent"}
+                          stroke={isWishlisted ? "red" : "#9ca3af"}
+                        />
                       </button>
                     </div>
 
